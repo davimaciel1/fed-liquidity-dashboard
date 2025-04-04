@@ -49,55 +49,50 @@ with col2:
 st.line_chart(df.set_index("Data")["WALCL"])
 
 # --- COMPARATIVO COM ATIVOS ---
-# --- COMPARATIVO COM ATIVOS USANDO ALPHA VANTAGE ---
+# --- COMPARATIVO COM ATIVOS USANDO FINNHUB ---
+import time
+
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
 
-AV_API_KEY = "SUA_CHAVE_ALPHA_VANTAGE"  # Insira sua API Key aqui
+FINNHUB_API_KEY = "SUA_CHAVE_FINNHUB"  # ← Substitua aqui com sua API KEY
 
-def get_stock_series(symbol):
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=compact&apikey={AV_API_KEY}"
-    response = requests.get(url).json()
-    series = response.get("Time Series (Daily)", {})
-    data = {
-        pd.to_datetime(date): float(val["5. adjusted close"])
-        for date, val in series.items()
-        if "5. adjusted close" in val
-    }
-    return pd.Series(data).sort_index()
-
-def get_crypto_series(symbol):
-    url = f"https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol={symbol}&market=USD&apikey={AV_API_KEY}"
-    response = requests.get(url).json()
-    series = response.get("Time Series (Digital Currency Daily)", {})
-    data = {}
-    for date, val in series.items():
-        close = val.get("4a. close (USD)")
-        if close:
-            data[pd.to_datetime(date)] = float(close)
-    return pd.Series(data).sort_index()
+def get_finnhub_series(symbol, is_crypto=False):
+    end = int(time.time())
+    start = end - 60 * 60 * 24 * 180  # Últimos 6 meses
+    market = "BINANCE:BTCUSDT" if is_crypto else symbol
+    url = f"https://finnhub.io/api/v1/stock/candle?symbol={market}&resolution=D&from={start}&to={end}&token={FINNHUB_API_KEY}"
+    res = requests.get(url).json()
+    
+    if res.get("s") != "ok":
+        return pd.Series(dtype="float64")
+    
+    df = pd.DataFrame({
+        "timestamp": res["t"],
+        "close": res["c"]
+    })
+    df["Data"] = pd.to_datetime(df["timestamp"], unit="s")
+    return df.set_index("Data")["close"]
 
 try:
-    spx = get_stock_series("SPY")
-    nasdaq = get_stock_series("QQQ")
-    btc = get_crypto_series("BTC")
+    spx = get_finnhub_series("^GSPC")     # S&P 500 index
+    ndx = get_finnhub_series("^IXIC")     # Nasdaq index
+    btc = get_finnhub_series("BINANCE:BTCUSDT", is_crypto=True)  # BTCUSD via Binance
 
-    if spx.empty or nasdaq.empty or btc.empty:
-        st.warning("⚠️ Não foi possível obter dados suficientes de SPY, QQQ ou BTC.")
+    if spx.empty or ndx.empty or btc.empty:
+        st.warning("⚠️ Não foi possível obter dados de SP500, Nasdaq ou BTC.")
     else:
         comparativo = pd.concat([
             spx.rename("S&P 500"),
-            nasdaq.rename("Nasdaq"),
+            ndx.rename("Nasdaq"),
             btc.rename("Bitcoin")
         ], axis=1).dropna()
 
-        if comparativo.empty:
-            st.warning("⚠️ As séries não possuem datas em comum suficientes para comparação.")
-        else:
-            comparativo = comparativo / comparativo.iloc[0]  # Normalizar
-            st.line_chart(comparativo)
+        comparativo = comparativo / comparativo.iloc[0]  # Normalizar
+        st.line_chart(comparativo)
 
 except Exception as e:
-    st.error(f"❌ Erro ao buscar dados da Alpha Vantage: {e}")
+    st.error(f"❌ Erro ao buscar dados da Finnhub: {e}")
+
 
 
 # --- ALERTA AUTOMÁTICO (placeholder) ---
