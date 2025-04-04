@@ -49,40 +49,39 @@ with col2:
 st.line_chart(df.set_index("Data")["WALCL"])
 
 # --- COMPARATIVO COM ATIVOS ---
-import json
-
-# --- Comparativo com Alpha Vantage ---
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
 
-AV_API_KEY = "PFB10ASGCSFR1E6W"  # insira sua chave aqui
-
-def get_alpha_series(symbol, market="stock"):
-    if market == "crypto":
-        url = f"https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol={symbol}&market=USD&apikey={AV_API_KEY}"
-        response = requests.get(url).json()
-        data = response.get("Time Series (Digital Currency Daily)", {})
-        df = pd.DataFrame({date: float(val["4a. close (USD)"]) for date, val in data.items()}, index=["BTC"]).T
-    else:
-        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=compact&apikey={AV_API_KEY}"
-        response = requests.get(url).json()
-        data = response.get("Time Series (Daily)", {})
-        df = pd.DataFrame({date: float(val["5. adjusted close"]) for date, val in data.items()}, index=["Price"]).T
-    df.index = pd.to_datetime(df.index)
-    df.columns = [symbol]
-    return df.sort_index()
-
 try:
-    spx = get_alpha_series("SPY")
-    nasdaq = get_alpha_series("QQQ")
-    btc = get_alpha_series("BTC", market="crypto")
+    # Baixar dados
+    spx_df = yf.download('^GSPC', period='6mo')
+    nasdaq_df = yf.download('^IXIC', period='6mo')
+    btc_df = yf.download('BTC-USD', period='6mo')
 
-    comparativo = pd.concat([spx, nasdaq, btc], axis=1).dropna()
-    comparativo = comparativo / comparativo.iloc[0]  # Normalizar
+    # Verificar se os três vieram com dados válidos
+    if not spx_df.empty and not nasdaq_df.empty and not btc_df.empty:
+        # Selecionar a coluna correta
+        spx_series = spx_df["Adj Close"] if "Adj Close" in spx_df.columns else spx_df["Close"]
+        nasdaq_series = nasdaq_df["Adj Close"] if "Adj Close" in nasdaq_df.columns else nasdaq_df["Close"]
+        btc_series = btc_df["Adj Close"] if "Adj Close" in btc_df.columns else btc_df["Close"]
 
-    st.line_chart(comparativo)
+        # Renomear as séries e montar o DataFrame
+        comparativo = pd.concat([
+            spx_series.rename("S&P 500"),
+            nasdaq_series.rename("Nasdaq"),
+            btc_series.rename("Bitcoin")
+        ], axis=1).dropna()
+
+        # Normalizar
+        comparativo = comparativo / comparativo.iloc[0]
+
+        # Mostrar gráfico
+        st.line_chart(comparativo)
+    else:
+        st.warning("⚠️ Não foi possível carregar dados de um ou mais ativos (SP500, Nasdaq ou BTC). Tente novamente mais tarde.")
 
 except Exception as e:
-    st.error(f"❌ Erro ao buscar dados da Alpha Vantage: {e}")
+    st.error("❌ Erro ao processar o comparativo. Detalhes no log do Streamlit.")
+
 
 # --- ALERTA AUTOMÁTICO (placeholder) ---
 if last_delta_bilhoes < -50:
