@@ -54,7 +54,7 @@ import time
 
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
 
-FINNHUB_API_KEY = "SUA_CHAVE_FINNHUB"  # ← Substitua aqui com sua API KEY
+FINNHUB_API_KEY = "cvo1311r01qppf5a7ihgcvo1311r01qppf5a7ii0"  # ← Substitua aqui com sua API KEY
 
 def get_finnhub_series(symbol, is_crypto=False):
     end = int(time.time())
