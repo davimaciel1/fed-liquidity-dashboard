@@ -77,18 +77,24 @@ def get_crypto_series(symbol):
     return pd.Series(data).sort_index()
 
 try:
-    spx = get_stock_series("SPY")        # ETF do S&P 500
-    nasdaq = get_stock_series("QQQ")     # ETF do Nasdaq
-    btc = get_crypto_series("BTC")       # Bitcoin
+    spx = get_stock_series("SPY")
+    nasdaq = get_stock_series("QQQ")
+    btc = get_crypto_series("BTC")
 
-    comparativo = pd.concat([
-        spx.rename("S&P 500"),
-        nasdaq.rename("Nasdaq"),
-        btc.rename("Bitcoin")
-    ], axis=1).dropna()
+    if spx.empty or nasdaq.empty or btc.empty:
+        st.warning("⚠️ Não foi possível obter dados suficientes de SPY, QQQ ou BTC.")
+    else:
+        comparativo = pd.concat([
+            spx.rename("S&P 500"),
+            nasdaq.rename("Nasdaq"),
+            btc.rename("Bitcoin")
+        ], axis=1).dropna()
 
-    comparativo = comparativo / comparativo.iloc[0]  # Normalizar
-    st.line_chart(comparativo)
+        if comparativo.empty:
+            st.warning("⚠️ As séries não possuem datas em comum suficientes para comparação.")
+        else:
+            comparativo = comparativo / comparativo.iloc[0]  # Normalizar
+            st.line_chart(comparativo)
 
 except Exception as e:
     st.error(f"❌ Erro ao buscar dados da Alpha Vantage: {e}")
