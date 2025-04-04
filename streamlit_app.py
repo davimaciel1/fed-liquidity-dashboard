@@ -62,12 +62,12 @@ nasdaq = nasdaq["Adj Close"] if "Adj Close" in nasdaq.columns else nasdaq["Close
 btc = yf.download('BTC-USD', period='6mo')
 btc = btc["Adj Close"] if "Adj Close" in btc.columns else btc["Close"]
 
-
 comparativo = pd.concat([
-    pd.DataFrame({"S&P 500": spx}),
-    pd.DataFrame({"Nasdaq": nasdaq}),
-    pd.DataFrame({"Bitcoin": btc})
+    spx.rename("S&P 500"),
+    nasdaq.rename("Nasdaq"),
+    btc.rename("Bitcoin")
 ], axis=1).dropna()
+
 
 
 comparativo = comparativo / comparativo.iloc[0]  # Normalizar
