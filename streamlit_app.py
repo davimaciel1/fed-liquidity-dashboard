@@ -54,7 +54,7 @@ import time
 
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
 
-FINNHUB_API_KEY = "cvo1311r01qppf5a7ihgcvo1311r01qppf5a7ii0"  # ← Substitua aqui com sua API KEY
+FINNHUB_API_KEY = "cvo1311r01qppf5a7ihgcvo1311r01qppf5a7ii0"
 
 def get_finnhub_series(symbol, is_crypto=False):
     end = int(time.time())
@@ -62,10 +62,10 @@ def get_finnhub_series(symbol, is_crypto=False):
     market = "BINANCE:BTCUSDT" if is_crypto else symbol
     url = f"https://finnhub.io/api/v1/stock/candle?symbol={market}&resolution=D&from={start}&to={end}&token={FINNHUB_API_KEY}"
     res = requests.get(url).json()
-    
+
     if res.get("s") != "ok":
         return pd.Series(dtype="float64")
-    
+
     df = pd.DataFrame({
         "timestamp": res["t"],
         "close": res["c"]
@@ -74,9 +74,9 @@ def get_finnhub_series(symbol, is_crypto=False):
     return df.set_index("Data")["close"]
 
 try:
-    spx = get_finnhub_series("^GSPC")     # S&P 500 index
-    ndx = get_finnhub_series("^IXIC")     # Nasdaq index
-    btc = get_finnhub_series("BINANCE:BTCUSDT", is_crypto=True)  # BTCUSD via Binance
+    spx = get_finnhub_series("SPY")  # ETF do S&P 500
+    ndx = get_finnhub_series("QQQ")  # ETF do Nasdaq
+    btc = get_finnhub_series("BINANCE:BTCUSDT", is_crypto=True)
 
     if spx.empty or ndx.empty or btc.empty:
         st.warning("⚠️ Não foi possível obter dados de SP500, Nasdaq ou BTC.")
@@ -87,11 +87,12 @@ try:
             btc.rename("Bitcoin")
         ], axis=1).dropna()
 
-        comparativo = comparativo / comparativo.iloc[0]  # Normalizar
+        comparativo = comparativo / comparativo.iloc[0]
         st.line_chart(comparativo)
 
 except Exception as e:
     st.error(f"❌ Erro ao buscar dados da Finnhub: {e}")
+
 
 
 
