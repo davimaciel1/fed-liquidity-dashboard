@@ -10,7 +10,7 @@ st.set_page_config(page_title="Fed Liquidity Tracker", layout="wide")
 st.title("📊 Painel de Liquidez do FED (WALCL)")
 
 # ---- Dados da FRED (WALCL) ----
-FRED_API_KEY = 57a975cb3b6c38b1344f6b85ebd760d2
+FRED_API_KEY = "57a975cb3b6c38b1344f6b85ebd760d2"
 series_id = "WALCL"
 url = f"https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={FRED_API_KEY}&file_type=json"
 
