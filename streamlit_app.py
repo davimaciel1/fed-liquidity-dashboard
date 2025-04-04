@@ -64,10 +64,11 @@ btc = btc["Adj Close"] if "Adj Close" in btc.columns else btc["Close"]
 
 
 comparativo = pd.concat([
-    spx.rename("S&P 500"),
-    nasdaq.rename("Nasdaq"),
-    btc.rename("Bitcoin")
+    pd.DataFrame(spx).rename(columns={spx.name: "S&P 500"}),
+    pd.DataFrame(nasdaq).rename(columns={nasdaq.name: "Nasdaq"}),
+    pd.DataFrame(btc).rename(columns={btc.name: "Bitcoin"})
 ], axis=1).dropna()
+
 comparativo = comparativo / comparativo.iloc[0]  # Normalizar
 
 st.line_chart(comparativo)
