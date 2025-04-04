@@ -62,11 +62,12 @@ nasdaq = nasdaq["Adj Close"] if "Adj Close" in nasdaq.columns else nasdaq["Close
 btc = yf.download('BTC-USD', period='6mo')
 btc = btc["Adj Close"] if "Adj Close" in btc.columns else btc["Close"]
 
-comparativo = pd.concat([
-    spx.rename("S&P 500"),
-    nasdaq.rename("Nasdaq"),
-    btc.rename("Bitcoin")
-], axis=1).dropna()
+comparativo = pd.DataFrame({
+    "S&P 500": spx,
+    "Nasdaq": nasdaq,
+    "Bitcoin": btc
+}).dropna()
+
 
 
 
