@@ -57,29 +57,31 @@ try:
     nasdaq_df = yf.download('^IXIC', period='6mo')
     btc_df = yf.download('BTC-USD', period='6mo')
 
-    # Verificar se os dados vieram
-    if spx_df.empty or nasdaq_df.empty or btc_df.empty:
-        st.error("❌ Erro ao baixar dados do S&P 500, Nasdaq ou Bitcoin. Tente novamente mais tarde.")
-    else:
-        # Pegar colunas corretas
-        spx = spx_df["Adj Close"] if "Adj Close" in spx_df.columns else spx_df["Close"]
-        nasdaq = nasdaq_df["Adj Close"] if "Adj Close" in nasdaq_df.columns else nasdaq_df["Close"]
-        btc = btc_df["Adj Close"] if "Adj Close" in btc_df.columns else btc_df["Close"]
+    # Verificar se os três vieram com dados válidos
+    if not spx_df.empty and not nasdaq_df.empty and not btc_df.empty:
+        # Selecionar a coluna correta
+        spx_series = spx_df["Adj Close"] if "Adj Close" in spx_df.columns else spx_df["Close"]
+        nasdaq_series = nasdaq_df["Adj Close"] if "Adj Close" in nasdaq_df.columns else nasdaq_df["Close"]
+        btc_series = btc_df["Adj Close"] if "Adj Close" in btc_df.columns else btc_df["Close"]
 
-        # Montar o DataFrame
+        # Renomear as séries e montar o DataFrame
         comparativo = pd.concat([
-            spx.rename("S&P 500"),
-            nasdaq.rename("Nasdaq"),
-            btc.rename("Bitcoin")
+            spx_series.rename("S&P 500"),
+            nasdaq_series.rename("Nasdaq"),
+            btc_series.rename("Bitcoin")
         ], axis=1).dropna()
 
         # Normalizar
         comparativo = comparativo / comparativo.iloc[0]
 
+        # Mostrar gráfico
         st.line_chart(comparativo)
+    else:
+        st.warning("⚠️ Não foi possível carregar dados de um ou mais ativos (SP500, Nasdaq ou BTC). Tente novamente mais tarde.")
 
 except Exception as e:
-    st.error(f"⚠️ Ocorreu um erro ao processar os dados do comparativo: {e}")
+    st.error("❌ Erro ao processar o comparativo. Detalhes no log do Streamlit.")
+
 
 
 # --- ALERTA AUTOMÁTICO (placeholder) ---
