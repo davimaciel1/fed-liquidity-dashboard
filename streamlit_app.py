@@ -50,30 +50,37 @@ st.line_chart(df.set_index("Data")["WALCL"])
 
 # --- COMPARATIVO COM ATIVOS ---
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
-spx = yf.download('^GSPC', period='6mo')
-if "Adj Close" in spx.columns:
-    spx = spx["Adj Close"]
-else:
-    spx = spx["Close"]
 
-nasdaq = yf.download('^IXIC', period='6mo')
-nasdaq = nasdaq["Adj Close"] if "Adj Close" in nasdaq.columns else nasdaq["Close"]
+try:
+    # Baixar dados
+    spx_df = yf.download('^GSPC', period='6mo')
+    nasdaq_df = yf.download('^IXIC', period='6mo')
+    btc_df = yf.download('BTC-USD', period='6mo')
 
-btc = yf.download('BTC-USD', period='6mo')
-btc = btc["Adj Close"] if "Adj Close" in btc.columns else btc["Close"]
+    # Verificar se os dados vieram
+    if spx_df.empty or nasdaq_df.empty or btc_df.empty:
+        st.error("❌ Erro ao baixar dados do S&P 500, Nasdaq ou Bitcoin. Tente novamente mais tarde.")
+    else:
+        # Pegar colunas corretas
+        spx = spx_df["Adj Close"] if "Adj Close" in spx_df.columns else spx_df["Close"]
+        nasdaq = nasdaq_df["Adj Close"] if "Adj Close" in nasdaq_df.columns else nasdaq_df["Close"]
+        btc = btc_df["Adj Close"] if "Adj Close" in btc_df.columns else btc_df["Close"]
 
-comparativo = pd.DataFrame({
-    "S&P 500": spx,
-    "Nasdaq": nasdaq,
-    "Bitcoin": btc
-}).dropna()
+        # Montar o DataFrame
+        comparativo = pd.concat([
+            spx.rename("S&P 500"),
+            nasdaq.rename("Nasdaq"),
+            btc.rename("Bitcoin")
+        ], axis=1).dropna()
 
+        # Normalizar
+        comparativo = comparativo / comparativo.iloc[0]
 
+        st.line_chart(comparativo)
 
+except Exception as e:
+    st.error(f"⚠️ Ocorreu um erro ao processar os dados do comparativo: {e}")
 
-comparativo = comparativo / comparativo.iloc[0]  # Normalizar
-
-st.line_chart(comparativo)
 
 # --- ALERTA AUTOMÁTICO (placeholder) ---
 if last_delta_bilhoes < -50:
