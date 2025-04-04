@@ -50,9 +50,18 @@ st.line_chart(df.set_index("Data")["WALCL"])
 
 # --- COMPARATIVO COM ATIVOS ---
 st.subheader("📈 Comparativo com SP500, Nasdaq e BTC")
-spx = yf.download('^GSPC', period='6mo')["Adj Close"]
-nasdaq = yf.download('^IXIC', period='6mo')["Adj Close"]
-btc = yf.download('BTC-USD', period='6mo')["Adj Close"]
+spx = yf.download('^GSPC', period='6mo')
+if "Adj Close" in spx.columns:
+    spx = spx["Adj Close"]
+else:
+    spx = spx["Close"]
+
+nasdaq = yf.download('^IXIC', period='6mo')
+nasdaq = nasdaq["Adj Close"] if "Adj Close" in nasdaq.columns else nasdaq["Close"]
+
+btc = yf.download('BTC-USD', period='6mo')
+btc = btc["Adj Close"] if "Adj Close" in btc.columns else btc["Close"]
+
 
 comparativo = pd.concat([
     spx.rename("S&P 500"),
